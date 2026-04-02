@@ -1,7 +1,9 @@
 # @attestto-com/cr-vc-sdk
 
-SDK para emitir y verificar Credenciales Verificables del ecosistema vial de Costa Rica.
+SDK para emitir y verificar Credenciales Verificables basado en los esquemas propuestos para el ecosistema vial de Costa Rica.
 
+> **Propuesta tecnica** de [Attestto Open](https://attestto.org). Los esquemas y tipos de credenciales son una propuesta abierta a revision por las instituciones competentes (COSEVI, MICITT, DGEV). Ver [cr-vc-schemas](https://github.com/Attestto-com/cr-vc-schemas) para detalles.
+>
 > **5 lineas de codigo para emitir una licencia de conducir digital.**
 
 ## Instalacion
