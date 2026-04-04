@@ -175,13 +175,16 @@ Los esquemas JSON-LD estan en: [Attestto-com/cr-vc-schemas](https://github.com/A
 
 ## Ecosistema
 
+Indice completo: [Attestto-com/attestto-open](https://github.com/Attestto-com/attestto-open)
+
 | Repositorio | Que hace |
 |---|---|
+| [vc-sdk](https://github.com/Attestto-com/vc-sdk) | SDK universal W3C VC (TypeScript) |
+| [cr-vc-sdk-dotnet](https://github.com/Attestto-com/cr-vc-sdk-dotnet) | SDK ecosistema vial CR (.NET 8) |
 | [cr-vc-schemas](https://github.com/Attestto-com/cr-vc-schemas) | Esquemas JSON-LD (11 tipos de VC) |
 | [did-sns-spec](https://github.com/Attestto-com/did-sns-spec) | Especificacion del metodo `did:sns` |
-| [wallet-identity-resolver](https://github.com/Attestto-com/wallet-identity-resolver) | Resolucion de identidad on-chain |
-| [credential-wallet-connector](https://github.com/Attestto-com/credential-wallet-connector) | Descubrimiento de wallets |
-| [vLEI-Solana-Bridge](https://github.com/Attestto-com/vLei-Solana-Bridge) | Puente vLEI → Solana |
+| [did-sns-resolver](https://github.com/Attestto-com/did-sns-resolver) | Universal Resolver para did:sns |
+| [id-wallet-adapter](https://github.com/Attestto-com/id-wallet-adapter) | Descubrimiento de wallets |
 
 ## Licencia
 
