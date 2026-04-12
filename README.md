@@ -1,23 +1,40 @@
-# @attestto-com/cr-vc-sdk
+# cr-vc-sdk
+> Costa Rica credential types and identity ecosystem
 
-SDK para emitir y verificar Credenciales Verificables basado en los esquemas propuestos para el ecosistema vial de Costa Rica.
+TypeScript SDK for issuing and verifying W3C Verifiable Credentials specific to Costa Rica's driving, identity, and government workflows. Extends `@attestto/vc-sdk` with pre-registered schemas for DrivingLicense, medical fitness, vehicle registration, and more. All documentation in English.
 
-> **Propuesta tecnica** de [Attestto Open](https://attestto.org). Los esquemas y tipos de credenciales son una propuesta abierta a revision por las instituciones competentes (COSEVI, MICITT, DGEV). Ver [cr-vc-schemas](https://github.com/Attestto-com/cr-vc-schemas) para detalles.
->
-> **5 lineas de codigo para emitir una licencia de conducir digital.**
+## Architecture
 
-## Instalacion
-
-```bash
-npm install @attestto-com/cr-vc-sdk
+```mermaid
+graph LR
+    A["cr-vc-sdk<br/>(CR types API)"]
+    B["vc-sdk<br/>(core)"]
+    C["cr-vc-schemas<br/>(JSON-LD)"]
+    D["attestto-app<br/>(CR modules)"]
+    
+    A --> B
+    A --> C
+    A --> D
 ```
 
-## Uso rapido
+## Quick start
 
-### Emitir una licencia de conducir digital
+### Prerequisites
+
+- Node ≥ 18
+- npm or yarn
+- Basic familiarity with `@attestto/vc-sdk`
+
+### Install
+
+```bash
+npm install @attestto/cr-vc-sdk
+```
+
+### Try it
 
 ```typescript
-import { VCIssuer, generateKeyPair } from '@attestto-com/cr-vc-sdk'
+import { VCIssuer, generateKeyPair } from '@attestto/cr-vc-sdk'
 
 const keys = generateKeyPair()
 const issuer = new VCIssuer({
@@ -33,21 +50,19 @@ const license = await issuer.issue({
     licenseNumber: 'CR-2026-045678',
     categories: ['B', 'A1'],
     issueDate: '2026-04-01',
-    expiresAt: '2032-04-01',
     status: 'active',
     points: 12,
     bloodType: 'O+',
-    restrictions: ['lentes correctivos'],
+    restrictions: ['corrective lenses'],
     issuingAuthority: 'did:web:cosevi.attestto.id',
   },
 })
-// license es una VC firmada, lista para entregar al wallet del ciudadano
 ```
 
-### Verificar una credencial
+Verify:
 
 ```typescript
-import { VCVerifier } from '@attestto-com/cr-vc-sdk'
+import { VCVerifier } from '@attestto/cr-vc-sdk'
 
 const verifier = new VCVerifier()
 const result = await verifier.verifyWithKey(license, keys.publicKey, 'Ed25519', {
@@ -56,124 +71,59 @@ const result = await verifier.verifyWithKey(license, keys.publicKey, 'Ed25519', 
   expectedIssuer: 'did:web:cosevi.attestto.id',
 })
 
-if (result.valid) {
-  console.log('Licencia valida')
-} else {
-  console.log('Errores:', result.errors)
-}
+console.log(result.valid)   // true
+console.log(result.errors)  // []
 ```
-
-### Emitir resultado de prueba teorica
-
-```typescript
-const testResult = await issuer.issue({
-  type: 'TheoreticalTestResult',
-  subjectDid: 'did:web:maria.attestto.id',
-  claims: {
-    status: 'approved',
-    score: 88,
-    passingScore: 70,
-    category: 'B',
-    testDate: '2026-03-15T14:00:00Z',
-    modality: 'online',
-    testCenterDID: 'did:web:academia-tica.attestto.id',
-    testCenterName: 'Academia Tica de Conduccion S.A.',
-    examVersionHash: 'sha256:e7f8a9b0c1d2e3f4...',
-    totalQuestions: 40,
-    correctAnswers: 35,
-    proctoring: {
-      method: 'remote-biometric',
-      telemetryHash: 'sha256:1a2b3c4d...',
-      livenessVerified: true,
-      identityVerified: true,
-    },
-  },
-})
-```
-
-### Verificar con resolver de claves publicas
-
-```typescript
-const verifier = new VCVerifier({
-  resolvePublicKey: async (did, keyId) => {
-    // Resolver la clave publica desde el DID document
-    // En produccion: fetch did:web document o consultar SAS
-    const response = await fetch(`https://${did.replace('did:web:', '')}/.well-known/did.json`)
-    const didDoc = await response.json()
-    // ... extraer la clave publica
-    return { publicKey, algorithm: 'Ed25519' }
-  },
-})
-
-const result = await verifier.verify(credential, {
-  checkExpiration: true,
-  expectedType: 'DrivingLicense',
-})
-```
-
-## Tipos de credenciales soportados
-
-| Tipo | Descripcion | Emisor tipico |
-|---|---|---|
-| `DrivingLicense` | Licencia de conducir digital (mDL) | COSEVI/DGEV |
-| `TheoreticalTestResult` | Prueba teorica (online o presencial) | DGEV / proveedor certificado |
-| `PracticalTestResult` | Prueba practica (conduccion real) | DGEV / proveedor certificado |
-| `MedicalFitnessCredential` | Dictamen medico de aptitud | Consultorio autorizado |
-| `VehicleRegistration` | Registro vehicular (placa) | Registro Nacional |
-| `VehicleTechnicalReview` | Revision tecnica (RTV) | Centro RTV |
-| `CirculationRights` | Derechos de circulacion (marchamo) | Hacienda / Municipalidad |
-| `SOATCredential` | Seguro obligatorio (SOAT) | INS |
-| `DriverIdentity` | Identidad del conductor | TSE / DGME / banco / COSEVI |
-| `TrafficViolation` | Multa de transito | COSEVI |
-| `AccidentReport` | Parte de accidente | COSEVI / INS |
 
 ## API
 
-### `VCIssuer`
+### VCIssuer
 
 ```typescript
-const issuer = new VCIssuer({
-  did: string,           // DID del emisor
-  privateKey: Uint8Array, // Clave privada Ed25519 o P-256
-  algorithm?: 'Ed25519' | 'ES256', // Default: Ed25519
-  keyId?: string,        // Default: '#key-1'
-})
-
-// Emitir VC con linked data proof
+const issuer = new VCIssuer(config: IssuerConfig)
 const vc = await issuer.issue(options: IssueOptions)
-
-// Emitir VC como JWT
 const jwt = await issuer.issueJwt(options: IssueOptions)
 ```
 
-### `VCVerifier`
+Re-exports `VCIssuer` from `@attestto/vc-sdk` with CR schema plugins pre-loaded.
+
+### VCVerifier
 
 ```typescript
-const verifier = new VCVerifier({
-  resolvePublicKey?: (did, keyId) => Promise<{ publicKey, algorithm } | null>
-})
-
-// Verificar con resolver
+const verifier = new VCVerifier(config?: VerifierConfig)
 const result = await verifier.verify(vc, options?: VerifyOptions)
-
-// Verificar con clave conocida (sin resolver)
 const result = await verifier.verifyWithKey(vc, publicKey, algorithm, options?)
 ```
 
-### `generateKeyPair`
+Verifies against known public key or via DID resolver. Returns `{ valid, checks, errors, warnings }`.
+
+### generateKeyPair
 
 ```typescript
-const keys = generateKeyPair('Ed25519') // o 'ES256'
-// keys.publicKey: Uint8Array
-// keys.privateKey: Uint8Array
-// keys.algorithm: 'Ed25519' | 'ES256'
+const keys = generateKeyPair('Ed25519' | 'ES256')
 ```
 
-## Esquemas
+Generate Ed25519 or ES256 key pairs for signing and verification.
 
-Los esquemas JSON-LD estan en: [Attestto-com/cr-vc-schemas](https://github.com/Attestto-com/cr-vc-schemas)
+## Supported credential types
 
-## Ecosistema
+| Type | Domain | Typical issuer |
+|---|---|---|
+| `DrivingLicense` | Driving | COSEVI / DGEV |
+| `TheoreticalTestResult` | Theory exam | DGEV / certified provider |
+| `PracticalTestResult` | Practical exam | DGEV / certified provider |
+| `NationalID` | Identity | TSE / DGME |
+| `PassportCredential` | Travel document | Dirección de Pasaportes |
+| `VehicleRegistration` | Registration | Registro Nacional |
+| `VehicleInspection` | Technical review (RTV) | RTV center |
+| `ProfessionalLicense` | Professional credentials | MICITT / regulatory bodies |
+| `SocialSecurityCredential` | CAJA / benefits | CAJA |
+| `MedicalRecord` | Health | Authorized clinics |
+| `BirthCertificate` | Vital records | TSE |
+| `MarriageCertificate` | Vital records | TSE |
+| `LandRegistry` | Property | Registro Nacional |
+
+JSON-LD contexts are hosted at `https://schemas.attestto.org/cr/`. See [cr-vc-schemas](https://github.com/Attestto-com/cr-vc-schemas) for full schema definitions.
 
 Indice completo: [Attestto-com/attestto-open](https://github.com/Attestto-com/attestto-open)
 
@@ -186,6 +136,44 @@ Indice completo: [Attestto-com/attestto-open](https://github.com/Attestto-com/at
 | [did-sns-resolver](https://github.com/Attestto-com/did-sns-resolver) | Universal Resolver para did:sns |
 | [id-wallet-adapter](https://github.com/Attestto-com/id-wallet-adapter) | Descubrimiento de wallets |
 
-## Licencia
+## Ecosystem
+
+| Repo | Role | Relationship |
+|---|---|---|
+| [vc-sdk](https://github.com/Attestto-com/vc-sdk) | Core SDK | Foundational API this extends |
+| [cr-vc-sdk](https://github.com/Attestto-com/cr-vc-sdk) | This repo | CR credential types |
+| [cr-vc-schemas](https://github.com/Attestto-com/cr-vc-schemas) | JSON-LD contexts | Schemas for all CR types |
+| [attestto-app](https://github.com/Attestto-com/attestto-app) | Citizen wallet | Wallet with CR issuance modules |
+| [did-sns-spec](https://github.com/Attestto-com/did-sns-spec) | DID method | Human-readable `did:sns` spec |
+| [wallet-identity-resolver](https://github.com/Attestto-com/wallet-identity-resolver) | Identity resolution | On-chain identity lookup |
+
+## Build with an LLM
+
+This repo ships a [`llms.txt`](./llms.txt) context file — a machine-readable summary of the API, data structures, and integration patterns designed to be read by AI coding assistants.
+
+### Recommended setup
+
+Use the [`attestto-dev-mcp`](../attestto-dev-mcp) server to give your LLM active access to the ecosystem:
+
+```bash
+cd ../attestto-dev-mcp
+npm install && npm run build
+```
+
+Then add it to your Claude / Cursor / Windsurf config and ask:
+
+> *"Explore the Attestto ecosystem and scaffold me a credential issuer"*
+
+### Which model?
+
+We recommend **[Claude](https://claude.ai) Pro** (5× usage vs free) or higher. Long context and strong TypeScript reasoning handle this codebase well. The MCP server works with any LLM that supports tool use.
+
+> **Quick start:** Ask your LLM to read `llms.txt` in this repo, then describe what you want to build. It will find the right archetype, generate boilerplate, and walk you through the first run.
+
+## Contributing
+
+Contributions welcome. Please open an issue or pull request on GitHub.
+
+## License
 
 Apache 2.0
