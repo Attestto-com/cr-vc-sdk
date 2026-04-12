@@ -34,10 +34,16 @@ import { sign, toBase64url } from './keys.js'
 import type { IssuerConfig, IssueOptions, VerifiableCredential, Proof } from './types.js'
 
 const CR_DRIVING_CONTEXT = 'https://schemas.attestto.org/cr/driving/v1'
+const CR_IDENTITY_CONTEXT = 'https://schemas.attestto.org/cr/identity/v1'
 const W3C_VC_CONTEXT = 'https://www.w3.org/2018/credentials/v1'
 
-/** Property name in credentialSubject for each credential type */
-const CREDENTIAL_TYPE_PROPERTY: Record<string, string> = {
+/** Context URL per credential type (defaults to CR_DRIVING_CONTEXT) */
+const CREDENTIAL_CONTEXT: Record<string, string> = {
+  IdentityVC: CR_IDENTITY_CONTEXT,
+}
+
+/** Property name in credentialSubject for each credential type (null = flat spread) */
+const CREDENTIAL_TYPE_PROPERTY: Record<string, string | null> = {
   DrivingLicense: 'license',
   TheoreticalTestResult: 'theoreticalTest',
   PracticalTestResult: 'practicalTest',
@@ -49,6 +55,7 @@ const CREDENTIAL_TYPE_PROPERTY: Record<string, string> = {
   DriverIdentity: 'driverIdentity',
   TrafficViolation: 'violation',
   AccidentReport: 'accident',
+  IdentityVC: null,  // flat claims — spread directly onto credentialSubject
 }
 
 export class VCIssuer {
@@ -74,7 +81,7 @@ export class VCIssuer {
 
     // Build the credential subject
     const propertyName = CREDENTIAL_TYPE_PROPERTY[options.type]
-    if (!propertyName) {
+    if (propertyName === undefined) {
       throw new Error(`Unknown credential type: ${options.type}`)
     }
 
@@ -82,20 +89,26 @@ export class VCIssuer {
       id: options.subjectDid,
     }
 
-    // If claims already have the property wrapper, use as-is
-    // Otherwise, wrap in the expected property
-    if (options.claims[propertyName]) {
+    // Null property = flat spread (IdentityVC), string = wrapper property (driving types)
+    if (propertyName === null) {
+      Object.assign(credentialSubject, options.claims)
+    } else if (options.claims[propertyName]) {
       Object.assign(credentialSubject, options.claims)
     } else {
       credentialSubject[propertyName] = options.claims
     }
 
+    // Select the domain context based on credential type
+    const domainContext = CREDENTIAL_CONTEXT[options.type] ?? CR_DRIVING_CONTEXT
+
     // Build the unsigned credential
     const credential: VerifiableCredential = {
-      '@context': [W3C_VC_CONTEXT, CR_DRIVING_CONTEXT],
+      '@context': [W3C_VC_CONTEXT, domainContext],
       id: credentialId,
       type: ['VerifiableCredential', options.type],
-      issuer: this.config.did,
+      issuer: options.issuerInfo
+        ? { id: this.config.did, ...options.issuerInfo }
+        : this.config.did,
       issuanceDate: now,
       credentialSubject: credentialSubject as VerifiableCredential['credentialSubject'],
     }

@@ -26,6 +26,7 @@ import type { VerifiableCredential, VerificationResult, VerificationCheck, Verif
 
 const W3C_VC_CONTEXT = 'https://www.w3.org/2018/credentials/v1'
 const CR_DRIVING_CONTEXT = 'https://schemas.attestto.org/cr/driving/v1'
+const CR_IDENTITY_CONTEXT = 'https://schemas.attestto.org/cr/identity/v1'
 
 /** Public key resolver — given a DID + key ID, returns the public key */
 export type PublicKeyResolver = (did: string, keyId: string) => Promise<{
@@ -126,7 +127,10 @@ export class VCVerifier {
     checks.push({ check: 'structure.type', passed: hasType })
     if (!hasType) errors.push('Missing VerifiableCredential in type array')
 
-    const hasIssuer = typeof credential.issuer === 'string' && credential.issuer.startsWith('did:')
+    const issuerDid = typeof credential.issuer === 'string'
+      ? credential.issuer
+      : credential.issuer?.id
+    const hasIssuer = typeof issuerDid === 'string' && issuerDid.startsWith('did:')
     checks.push({ check: 'structure.issuer', passed: hasIssuer })
     if (!hasIssuer) errors.push('Missing or invalid issuer DID')
 
@@ -148,9 +152,12 @@ export class VCVerifier {
     checks.push({ check: 'context.w3c', passed: hasW3C })
     if (!hasW3C) errors.push(`Missing W3C VC context: ${W3C_VC_CONTEXT}`)
 
-    const hasCR = credential['@context'].includes(CR_DRIVING_CONTEXT)
-    checks.push({ check: 'context.cr-driving', passed: hasCR })
-    if (!hasCR) errors.push(`Missing CR driving context: ${CR_DRIVING_CONTEXT}`)
+    const isIdentity = credential.type.includes('IdentityVC')
+    const expectedContext = isIdentity ? CR_IDENTITY_CONTEXT : CR_DRIVING_CONTEXT
+    const contextLabel = isIdentity ? 'cr-identity' : 'cr-driving'
+    const hasDomain = credential['@context'].includes(expectedContext)
+    checks.push({ check: `context.${contextLabel}`, passed: hasDomain })
+    if (!hasDomain) errors.push(`Missing ${contextLabel} context: ${expectedContext}`)
   }
 
   private checkType(
@@ -170,9 +177,12 @@ export class VCVerifier {
     checks: VerificationCheck[],
     errors: string[]
   ): void {
-    const matches = credential.issuer === expectedIssuer
+    const actualIssuer = typeof credential.issuer === 'string'
+      ? credential.issuer
+      : credential.issuer?.id
+    const matches = actualIssuer === expectedIssuer
     checks.push({ check: 'issuer.expected', passed: matches, message: expectedIssuer })
-    if (!matches) errors.push(`Expected issuer "${expectedIssuer}", got "${credential.issuer}"`)
+    if (!matches) errors.push(`Expected issuer "${expectedIssuer}", got "${actualIssuer}"`)
   }
 
   private checkExpiration(

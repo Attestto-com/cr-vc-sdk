@@ -15,13 +15,14 @@ export type CredentialType =
   | 'DriverIdentity'
   | 'TrafficViolation'
   | 'AccidentReport'
+  | 'IdentityVC'
 
 /** W3C Verifiable Credential envelope */
 export interface VerifiableCredential {
   '@context': string[]
   id: string
   type: ['VerifiableCredential', ...string[]]
-  issuer: string
+  issuer: string | { id: string; [key: string]: unknown }
   issuanceDate: string
   expirationDate?: string
   credentialSubject: {
@@ -96,6 +97,8 @@ export interface IssueOptions {
   credentialStatus?: CredentialStatus
   /** Optional credential ID (auto-generated if not provided) */
   id?: string
+  /** Optional rich issuer metadata (name, carneNumber, colegioId, jurisdiction) */
+  issuerInfo?: { name: string; carneNumber?: string; colegioId?: string; jurisdiction?: string }
 }
 
 /** Options for verifying a credential */

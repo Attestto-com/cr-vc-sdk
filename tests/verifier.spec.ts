@@ -192,4 +192,76 @@ describe('VCVerifier', () => {
     expect(result.valid).toBe(false)
     expect(result.errors.length).toBeGreaterThanOrEqual(3)
   })
+
+  it('verifies IdentityVC with cr-identity context', async () => {
+    const notaryKeys = generateKeyPair('Ed25519')
+    const notary = new VCIssuer({
+      did: 'did:sns:notario.attestto.sol',
+      privateKey: notaryKeys.privateKey,
+    })
+
+    const vc = await notary.issue({
+      type: 'IdentityVC',
+      subjectDid: 'did:sns:citizen.attestto.sol',
+      claims: {
+        type: 'NaturalPerson',
+        nationalId: { type: 'cedula', number: '1-0000-0000', country: 'CR' },
+        fullName: 'Test Citizen',
+        dateOfBirth: '1990-01-01',
+        photoHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+        notarialAttestation: { protocolNumber: '2026-00001', attestedAt: '2026-04-11T00:00:00Z' },
+      },
+    })
+
+    const verifier = new VCVerifier()
+    const result = await verifier.verifyWithKey(vc, notaryKeys.publicKey, 'Ed25519', {
+      expectedType: 'IdentityVC',
+    })
+
+    expect(result.valid).toBe(true)
+    expect(result.errors).toHaveLength(0)
+  })
+
+  it('verifies IdentityVC with object issuer', async () => {
+    const notaryKeys = generateKeyPair('Ed25519')
+    const notary = new VCIssuer({
+      did: 'did:sns:notario.attestto.sol',
+      privateKey: notaryKeys.privateKey,
+    })
+
+    const vc = await notary.issue({
+      type: 'IdentityVC',
+      subjectDid: 'did:sns:citizen.attestto.sol',
+      claims: {
+        type: 'NaturalPerson',
+        nationalId: { type: 'cedula', number: '1-0000-0000', country: 'CR' },
+        fullName: 'Test',
+        dateOfBirth: '1990-01-01',
+        photoHash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+        notarialAttestation: { protocolNumber: '2026-00001', attestedAt: '2026-04-11T00:00:00Z' },
+      },
+      issuerInfo: { name: 'Ana Garcia', carneNumber: 'AB-123' },
+    })
+
+    const verifier = new VCVerifier()
+    const result = await verifier.verifyWithKey(vc, notaryKeys.publicKey, 'Ed25519', {
+      expectedIssuer: 'did:sns:notario.attestto.sol',
+    })
+
+    expect(result.valid).toBe(true)
+  })
+
+  it('DrivingLicense still passes context check (regression)', async () => {
+    const vc = await testIssuer.issue({
+      type: 'DrivingLicense',
+      subjectDid: 'did:web:maria.attestto.id',
+      claims: { licenseNumber: 'CR-REG', categories: ['B'], status: 'active' },
+    })
+
+    const verifier = new VCVerifier()
+    const result = await verifier.verifyWithKey(vc, keys.publicKey, 'Ed25519')
+
+    expect(result.valid).toBe(true)
+    expect(result.checks.some(c => c.check === 'context.cr-driving' && c.passed)).toBe(true)
+  })
 })
