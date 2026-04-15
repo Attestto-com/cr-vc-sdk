@@ -46,7 +46,7 @@
     "type": "git",
     "url": "https://github.com/Attestto-com/cr-vc-sdk.git"
   },
-  "homepage": "https://github.com/Attestto-com/cr-vc-sdk",
+  "homepage": "https://attestto.org",
   "engines": {
     "node": ">=18"
   },
