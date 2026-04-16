@@ -1,5 +1,5 @@
 {
-  "name": "@attestto-com/cr-vc-sdk",
+  "name": "@attestto/cr-vc-sdk",
   "version": "0.1.0",
   "description": "SDK for issuing and verifying Verifiable Credentials in the Costa Rica SSI driving ecosystem",
   "type": "module",
@@ -26,8 +26,7 @@
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist coverage",
-    "build:types": "tsc",
-    "prepublishOnly": "npm run build && npm run build:types"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "verifiable-credentials",

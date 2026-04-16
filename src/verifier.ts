@@ -3,7 +3,7 @@
  *
  * Usage:
  * ```ts
- * import { VCVerifier } from '@attestto-com/cr-vc-sdk'
+ * import { VCVerifier } from '@attestto/cr-vc-sdk'
  *
  * const verifier = new VCVerifier()
  *

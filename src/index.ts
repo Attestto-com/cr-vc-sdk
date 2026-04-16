@@ -1,5 +1,5 @@
 /**
- * @attestto-com/cr-vc-sdk
+ * @attestto/cr-vc-sdk
  *
  * SDK for issuing and verifying Verifiable Credentials
  * in the Costa Rica SSI driving ecosystem.

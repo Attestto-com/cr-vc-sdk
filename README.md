@@ -1,10 +1,10 @@
 # cr-vc-sdk
 
-[![npm version](https://img.shields.io/npm/v/@attestto-com/cr-vc-sdk.svg)](https://www.npmjs.com/package/@attestto-com/cr-vc-sdk)
+[![npm version](https://img.shields.io/npm/v/@attestto/cr-vc-sdk.svg)](https://www.npmjs.com/package/@attestto/cr-vc-sdk)
 
 > Costa Rica credential types and identity ecosystem
 
-`@attestto-com/cr-vc-sdk` is a TypeScript SDK for issuing and verifying W3C Verifiable Credentials specific to Costa Rica's driving, identity, and government workflows. Extends `@attestto/vc-sdk` with pre-registered schemas for DrivingLicense, medical fitness, vehicle registration, and more. All documentation in English. For full documentation visit [attestto.org/docs](https://attestto.org/docs).
+`@attestto/cr-vc-sdk` is a TypeScript SDK for issuing and verifying W3C Verifiable Credentials specific to Costa Rica's driving, identity, and government workflows. Extends `@attestto/vc-sdk` with pre-registered schemas for DrivingLicense, medical fitness, vehicle registration, and more. All documentation in English. For full documentation visit [attestto.org/docs](https://attestto.org/docs).
 
 ## Architecture
 

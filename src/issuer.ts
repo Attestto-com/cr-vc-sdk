@@ -3,7 +3,7 @@
  *
  * Usage:
  * ```ts
- * import { VCIssuer, generateKeyPair } from '@attestto-com/cr-vc-sdk'
+ * import { VCIssuer, generateKeyPair } from '@attestto/cr-vc-sdk'
  *
  * const keys = generateKeyPair()
  * const issuer = new VCIssuer({
@@ -169,7 +169,7 @@ export class VCIssuer {
     const alg = this.config.algorithm === 'Ed25519' ? 'EdDSA' : 'ES256'
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      privateKey,
+      privateKey as BufferSource,
       this.config.algorithm === 'Ed25519'
         ? { name: 'Ed25519' }
         : { name: 'ECDSA', namedCurve: 'P-256' },
