@@ -90,9 +90,13 @@ export class VCVerifier {
       warnings.push('No proof present — credential is unsigned')
     }
 
-    // 8. Check credential status (revocation) — placeholder
+    // 8. Check credential status (revocation)
     if (options.checkStatus && credential.credentialStatus) {
-      warnings.push('Status check requested but StatusList2021 verification not yet implemented')
+      // StatusList2021 checking requires fetching the status list endpoint
+      // and verifying the bitstring. Callers should not silently skip this —
+      // surface it as a warning so they know the check was requested but
+      // the credential's revocation state is unconfirmed.
+      warnings.push('Credential has credentialStatus but revocation check is not available in this SDK version')
     }
 
     const valid = errors.length === 0
