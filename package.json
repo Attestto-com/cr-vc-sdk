@@ -21,6 +21,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude 'tests/integration/**'",
+    "test:integration": "vitest run tests/integration/",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src tests",
