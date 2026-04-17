@@ -25,7 +25,7 @@
 ## Architecture
 
 - Wraps `@attestto/vc-sdk` with CR-specific typed credential helpers
-- 11 credential types: DrivingLicense, TheoreticalTestResult, PracticalTestResult, MedicalFitnessCredential, VehicleRegistration, VehicleTechnicalReview, CirculationRights, SOATCredential, DriverIdentity, TrafficViolation, AccidentReport
+- 22 credential types across 6 domains: vehicular (11), citizen identity (4), notarial (2), signing (2), competency (2), agreement (1)
 - JSON-LD schemas live in `schemas/` and ship with the package
 - Schema definitions come from the sibling `cr-vc-schemas` repo
 

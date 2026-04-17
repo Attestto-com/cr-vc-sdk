@@ -4,6 +4,7 @@
 
 /** Supported credential types from cr-vc-schemas */
 export type CredentialType =
+  // Vehicular / COSEVI ecosystem
   | 'DrivingLicense'
   | 'TheoreticalTestResult'
   | 'PracticalTestResult'
@@ -15,7 +16,22 @@ export type CredentialType =
   | 'DriverIdentity'
   | 'TrafficViolation'
   | 'AccidentReport'
+  // Citizen identity (self-attested via OCR scan)
+  | 'CedulaIdentidadCR'
+  | 'DrivingLicenseCR'
+  | 'PassportCR'
+  | 'BasicDigitalLiteracyCredential'
+  // Notarial identity
   | 'IdentityVC'
+  | 'DictamenMedicoVC'
+  // Signing
+  | 'DocumentSignatureVC'
+  | 'AttesttoPdfSignature'
+  // Competency
+  | 'DrivingTheoryExamCR'
+  | 'DrivingCompetencyCR'
+  // Agreement
+  | 'ConversationAgreementCredential'
 
 /** W3C Verifiable Credential envelope */
 export interface VerifiableCredential {
