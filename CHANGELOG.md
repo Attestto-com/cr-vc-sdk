@@ -4,6 +4,20 @@ All notable changes to `@attestto/cr-vc-sdk` will be documented in this file.
 
 This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-04-17
+
+### Added
+- **10 new credential types** across 4 domains (22 total):
+  - Citizen identity: CedulaIdentidadCR, DrivingLicenseCR, PassportCR, BasicDigitalLiteracyCredential
+  - Signing: DocumentSignatureVC, AttesttoPdfSignature
+  - Competency: DrivingTheoryExamCR, DrivingCompetencyCR
+  - Medical: DictamenMedicoVC
+  - Agreement: ConversationAgreementCredential
+- Context routing for new domains: `attestto-signing-v1`, updated `cr-identity-v1` and `cr-driving-v1`.
+
+### Fixed
+- Exports field ordering: `types` condition now comes before `import`/`require` for correct TypeScript resolution in `moduleResolution: "bundler"` and `"node16"`.
+
 ## [0.1.0] - 2026-04-12
 
 ### Added
