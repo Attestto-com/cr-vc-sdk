@@ -100,7 +100,7 @@ describe('VCVerifier', () => {
     expect(result.errors.some((e) => e.includes('expired'))).toBe(true)
   })
 
-  it('warns about missing proof when no resolver configured', async () => {
+  it('is NOT valid when a proof is present but no resolver is configured (fail-closed, SOC-19)', async () => {
     const vc = await testIssuer.issue({
       type: 'DrivingLicense',
       subjectDid: 'did:web:maria.attestto.id',
@@ -110,7 +110,23 @@ describe('VCVerifier', () => {
     const verifier = new VCVerifier() // No resolver
     const result = await verifier.verify(vc)
 
-    // Valid because structure is correct, but warning about unverified signature
+    expect(result.valid).toBe(false)
+    expect(result.signatureVerified).toBe(false)
+    expect(result.errors.some((e) => e.includes('not verified'))).toBe(true)
+  })
+
+  it('requireSignature:false allows structural-only validation with a warning (SOC-19)', async () => {
+    const vc = await testIssuer.issue({
+      type: 'DrivingLicense',
+      subjectDid: 'did:web:maria.attestto.id',
+      claims: { licenseNumber: 'CR-TEST', categories: ['B'], status: 'active' },
+    })
+
+    const verifier = new VCVerifier() // No resolver
+    const result = await verifier.verify(vc, { requireSignature: false })
+
+    expect(result.valid).toBe(true) // structurally valid…
+    expect(result.signatureVerified).toBe(false) // …but signature not verified
     expect(result.warnings.some((w) => w.includes('not verified'))).toBe(true)
   })
 
