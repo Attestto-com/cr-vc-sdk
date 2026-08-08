@@ -37,13 +37,24 @@ export type PublicKeyResolver = (did: string, keyId: string) => Promise<{
 export interface VerifierConfig {
   /** Function to resolve public keys from DIDs */
   resolvePublicKey?: PublicKeyResolver
+  /**
+   * Optional issuer-binding check for delegated signing. Given the credential
+   * issuer and the proof's `verificationMethod`, resolve the issuer's DID
+   * document and return true iff that key is an authorized `assertionMethod` of
+   * the issuer. When omitted, the verifier requires the verificationMethod's DID
+   * to equal the credential issuer (direct binding). A throwing hook is treated
+   * as "not authorized" (fail-closed).
+   */
+  verifyIssuerBinding?: (issuer: string, verificationMethod: string) => Promise<boolean>
 }
 
 export class VCVerifier {
   private resolvePublicKey?: PublicKeyResolver
+  private verifyIssuerBinding?: (issuer: string, verificationMethod: string) => Promise<boolean>
 
   constructor(config?: VerifierConfig) {
     this.resolvePublicKey = config?.resolvePublicKey
+    this.verifyIssuerBinding = config?.verifyIssuerBinding
   }
 
   /**
@@ -81,13 +92,23 @@ export class VCVerifier {
     // 6. Check issuance date
     this.checkIssuanceDate(credential, checks, errors)
 
-    // 7. Verify proof/signature
-    if (credential.proof && this.resolvePublicKey) {
-      await this.checkProof(credential, checks, errors)
-    } else if (credential.proof && !this.resolvePublicKey) {
-      warnings.push('Proof present but no public key resolver configured — signature not verified')
-    } else if (!credential.proof) {
-      warnings.push('No proof present — credential is unsigned')
+    // 7. Verify proof/signature. Fail-closed by default (SOC-19): an unsigned
+    // credential, or one that cannot be verified, is an ERROR — not a warning —
+    // so `valid` never conflates structural validity with signature validity.
+    const requireSignature = options.requireSignature !== false
+    let signatureVerified = false
+    if (credential.proof) {
+      if (this.resolvePublicKey) {
+        signatureVerified = await this.checkProof(credential, checks, errors)
+      } else {
+        const msg = 'Proof present but no public key resolver configured — signature not verified'
+        if (requireSignature) errors.push(msg)
+        else warnings.push(msg)
+      }
+    } else {
+      const msg = 'No proof present — credential is unsigned'
+      if (requireSignature) errors.push(msg)
+      else warnings.push(msg)
     }
 
     // 8. Check credential status (revocation)
@@ -101,7 +122,7 @@ export class VCVerifier {
 
     const valid = errors.length === 0
 
-    return { valid, checks, errors, warnings }
+    return { valid, signatureVerified, checks, errors, warnings }
   }
 
   /**
@@ -231,15 +252,22 @@ export class VCVerifier {
     if (!isValid) errors.push(`Credential issuance date is in the future: ${credential.issuanceDate}`)
   }
 
+  /**
+   * Verify the credential's proof. Returns true only if the signature is
+   * cryptographically valid AND bound to the credential issuer (SOC-16): the
+   * signing key's DID must equal `credential.issuer`, or be authorized for the
+   * issuer by the optional `verifyIssuerBinding` hook. This blocks the forgery
+   * where an attacker claims a trusted `issuer` but signs with their own key.
+   */
   private async checkProof(
     credential: VerifiableCredential,
     checks: VerificationCheck[],
     errors: string[]
-  ): Promise<void> {
+  ): Promise<boolean> {
     if (!credential.proof || !this.resolvePublicKey) {
       checks.push({ check: 'proof.signature', passed: false, message: 'No proof or resolver' })
       errors.push('Cannot verify proof')
-      return
+      return false
     }
 
     // Parse verification method to get DID and key ID
@@ -248,12 +276,26 @@ export class VCVerifier {
     const did = hashIndex > 0 ? verificationMethod.substring(0, hashIndex) : verificationMethod
     const keyId = hashIndex > 0 ? verificationMethod.substring(hashIndex) : '#key-1'
 
+    // Issuer binding (SOC-16): the signing key must be the issuer's own, or a
+    // key the issuer explicitly authorizes.
+    const issuerId =
+      typeof credential.issuer === 'string' ? credential.issuer : credential.issuer?.id
+    const issuerBound = this.verifyIssuerBinding
+      ? await this.verifyIssuerBinding(issuerId ?? '', verificationMethod).catch(() => false)
+      : did === issuerId
+    checks.push({ check: 'proof.issuerBinding', passed: issuerBound })
+    if (!issuerBound) {
+      errors.push(
+        `Signature not bound to the credential issuer${issuerId ? ` "${issuerId}"` : ''} — signing key ${verificationMethod} is not the issuer's`
+      )
+    }
+
     // Resolve public key
     const resolved = await this.resolvePublicKey(did, keyId)
     if (!resolved) {
       checks.push({ check: 'proof.keyResolution', passed: false, message: `Could not resolve key for ${did}` })
       errors.push(`Could not resolve public key for ${verificationMethod}`)
-      return
+      return false
     }
 
     checks.push({ check: 'proof.keyResolution', passed: true })
@@ -268,5 +310,7 @@ export class VCVerifier {
 
     checks.push({ check: 'proof.signature', passed: isValid })
     if (!isValid) errors.push('Invalid signature')
+
+    return isValid && issuerBound
   }
 }
