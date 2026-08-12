@@ -62,14 +62,33 @@ export class VCIssuer {
   private config: Required<IssuerConfig>
 
   constructor(config: IssuerConfig) {
+    // SOC-174 — no `?? '#key-1'`. The DID above is of unspecified method, and
+    // `#key-1` is one method's convention: did:sns names its owner key
+    // `#solana-key`, did:key and did:jwk use `#0`, a did:web document names
+    // whatever it names. Defaulting produced a well-formed credential naming a
+    // verification method the issuer's own document does not contain, which a
+    // verifier can only report as an ordinary signature failure. Only the
+    // caller knows which key it signed with, so the caller states it.
+    if (!config.keyId) {
+      throw new Error('IssuerConfig.keyId is required — the key fragment cannot be guessed')
+    }
+    if (!config.keyId.startsWith('#')) {
+      throw new Error(`IssuerConfig.keyId must be a fragment starting with "#": ${config.keyId}`)
+    }
+
     this.config = {
       did: config.did,
       privateKey: typeof config.privateKey === 'string'
         ? new TextEncoder().encode(config.privateKey)
         : config.privateKey,
       algorithm: config.algorithm ?? 'Ed25519',
-      keyId: config.keyId ?? '#key-1',
+      keyId: config.keyId,
     }
+  }
+
+  /** The key fragment this issuer signs with, as configured. */
+  get keyId(): string {
+    return this.config.keyId
   }
 
   /**

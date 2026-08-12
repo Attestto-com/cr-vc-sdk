@@ -161,6 +161,7 @@ const SAMPLE_CLAIMS: Record<CredentialType, Record<string, unknown>> = {
 const keys = generateKeyPair('Ed25519')
 const issuer = new VCIssuer({
   did: 'did:web:integration-test.attestto.id',
+  keyId: '#key-0',
   privateKey: keys.privateKey,
 })
 
@@ -293,7 +294,8 @@ describe('ES256 algorithm end-to-end', () => {
   const es256Keys = generateKeyPair('ES256')
   const es256Issuer = new VCIssuer({
     did: 'did:web:es256-test.attestto.id',
-    privateKey: es256Keys.privateKey,
+    keyId: '#key-0',
+  privateKey: es256Keys.privateKey,
     algorithm: 'ES256',
   })
 

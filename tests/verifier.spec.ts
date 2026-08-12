@@ -5,7 +5,8 @@ describe('VCVerifier', () => {
   const keys = generateKeyPair('Ed25519')
   const testIssuer = new VCIssuer({
     did: 'did:web:cosevi.attestto.id',
-    privateKey: keys.privateKey,
+    keyId: '#key-0',
+  privateKey: keys.privateKey,
   })
 
   it('verifies a valid credential with known public key', async () => {
@@ -213,7 +214,8 @@ describe('VCVerifier', () => {
     const notaryKeys = generateKeyPair('Ed25519')
     const notary = new VCIssuer({
       did: 'did:sns:notario.attestto.sol',
-      privateKey: notaryKeys.privateKey,
+      keyId: '#key-0',
+  privateKey: notaryKeys.privateKey,
     })
 
     const vc = await notary.issue({
@@ -242,7 +244,8 @@ describe('VCVerifier', () => {
     const notaryKeys = generateKeyPair('Ed25519')
     const notary = new VCIssuer({
       did: 'did:sns:notario.attestto.sol',
-      privateKey: notaryKeys.privateKey,
+      keyId: '#key-0',
+  privateKey: notaryKeys.privateKey,
     })
 
     const vc = await notary.issue({

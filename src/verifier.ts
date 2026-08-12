@@ -273,8 +273,31 @@ export class VCVerifier {
     // Parse verification method to get DID and key ID
     const verificationMethod = credential.proof.verificationMethod
     const hashIndex = verificationMethod.lastIndexOf('#')
-    const did = hashIndex > 0 ? verificationMethod.substring(0, hashIndex) : verificationMethod
-    const keyId = hashIndex > 0 ? verificationMethod.substring(hashIndex) : '#key-1'
+    // ── SOC-174 — the proof names its key, or it does not verify ───────────
+    //
+    // This used to read `hashIndex > 0 ? … : '#key-1'`, so a proof whose
+    // `verificationMethod` carried no fragment was resolved against `#key-1` —
+    // a key the VERIFIER chose. If the subject's document happened to contain
+    // one, a proof that named no key at all verified against it.
+    //
+    // Which key signed a credential is the proof's statement to make. A
+    // verifier that supplies the missing half of an assertion and then checks
+    // the result is checking its own guess, so this refuses before resolution
+    // is attempted.
+    if (hashIndex <= 0 || hashIndex === verificationMethod.length - 1) {
+      checks.push({
+        check: 'proof.verificationMethod',
+        passed: false,
+        message: 'names no key fragment',
+      })
+      errors.push(
+        `proof.verificationMethod names no key fragment: ${verificationMethod} — a proof must name the key that signed it`
+      )
+      return false
+    }
+
+    const did = verificationMethod.substring(0, hashIndex)
+    const keyId = verificationMethod.substring(hashIndex)
 
     // Issuer binding (SOC-16): the signing key must be the issuer's own, or a
     // key the issuer explicitly authorizes.

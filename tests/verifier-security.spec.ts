@@ -11,7 +11,8 @@ import { VCIssuer, VCVerifier, generateKeyPair, sign, toBase64url } from '../src
 import type { PublicKeyResolver } from '../src/verifier.js'
 
 const issuerKeys = generateKeyPair('Ed25519')
-const issuer = new VCIssuer({ did: 'did:web:cosevi.attestto.id', privateKey: issuerKeys.privateKey })
+const issuer = new VCIssuer({ did: 'did:web:cosevi.attestto.id', keyId: '#key-0',
+  privateKey: issuerKeys.privateKey })
 
 function resolverFor(did: string, publicKey: Uint8Array): PublicKeyResolver {
   return async (d: string) => (d === did ? { publicKey, algorithm: 'Ed25519' } : null)
