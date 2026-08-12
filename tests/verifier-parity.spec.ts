@@ -39,7 +39,8 @@ const ATTACKER_DID = 'did:web:attacker.example'
 const issuerKeys = generateKeyPair('Ed25519')
 const attackerKeys = generateKeyPair('Ed25519')
 
-const issuer = new VCIssuer({ did: ISSUER_DID, privateKey: issuerKeys.privateKey })
+const issuer = new VCIssuer({ did: ISSUER_DID, keyId: '#key-0',
+  privateKey: issuerKeys.privateKey })
 
 /** Resolves both the honest issuer and the attacker — a permissive resolver is
  *  the realistic case, and is precisely the condition SOC-16 is about. */
@@ -110,7 +111,8 @@ describe('parity: no verifier in this estate may accept an issuer it did not ver
     // Every cryptographic check passes. Only the binding check catches it.
     const forged = await new VCIssuer({
       did: ATTACKER_DID,
-      privateKey: attackerKeys.privateKey,
+      keyId: '#key-0',
+  privateKey: attackerKeys.privateKey,
     }).issue({
       type: 'DrivingLicense',
       subjectDid: 'did:web:maria.attestto.id',

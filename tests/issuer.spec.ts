@@ -5,7 +5,8 @@ describe('VCIssuer', () => {
   const keys = generateKeyPair('Ed25519')
   const issuer = new VCIssuer({
     did: 'did:web:cosevi.attestto.id',
-    privateKey: keys.privateKey,
+    keyId: '#key-0',
+  privateKey: keys.privateKey,
   })
 
   it('issues a DrivingLicense credential', async () => {
@@ -31,14 +32,17 @@ describe('VCIssuer', () => {
     expect((vc.credentialSubject.license as any).licenseNumber).toBe('CR-2026-045678')
     expect(vc.proof).toBeDefined()
     expect(vc.proof!.type).toBe('Ed25519Signature2020')
-    expect(vc.proof!.verificationMethod).toBe('did:web:cosevi.attestto.id#key-1')
+    // SOC-174: the fixture deliberately uses a fragment that is NOT `#key-1`, so
+    // a regression to the old default reddens here instead of passing.
+    expect(vc.proof!.verificationMethod).toBe('did:web:cosevi.attestto.id#key-0')
     expect(vc['@context']).toContain('https://schemas.attestto.org/cr/driving/v1')
   })
 
   it('issues a TheoreticalTestResult credential', async () => {
     const dgev = new VCIssuer({
       did: 'did:web:dgev.attestto.id',
-      privateKey: generateKeyPair().privateKey,
+      keyId: '#key-0',
+  privateKey: generateKeyPair().privateKey,
     })
 
     const vc = await dgev.issue({
@@ -89,7 +93,8 @@ describe('VCIssuer', () => {
   it('issues a MedicalFitnessCredential', async () => {
     const clinic = new VCIssuer({
       did: 'did:web:clinica-salud.attestto.id',
-      privateKey: generateKeyPair().privateKey,
+      keyId: '#key-0',
+  privateKey: generateKeyPair().privateKey,
     })
 
     const vc = await clinic.issue({
@@ -185,7 +190,8 @@ describe('VCIssuer', () => {
   it('issues an IdentityVC with natural person claims (flat subject)', async () => {
     const notary = new VCIssuer({
       did: 'did:sns:notario-garcia.abogados.attestto.sol',
-      privateKey: generateKeyPair().privateKey,
+      keyId: '#key-0',
+  privateKey: generateKeyPair().privateKey,
     })
 
     const vc = await notary.issue({
@@ -222,7 +228,8 @@ describe('VCIssuer', () => {
   it('issues an IdentityVC with organization roles (UBO)', async () => {
     const notary = new VCIssuer({
       did: 'did:sns:notario.attestto.sol',
-      privateKey: generateKeyPair().privateKey,
+      keyId: '#key-0',
+  privateKey: generateKeyPair().privateKey,
     })
 
     const vc = await notary.issue({
@@ -264,7 +271,8 @@ describe('VCIssuer', () => {
   it('issues an IdentityVC with rich issuer metadata', async () => {
     const notary = new VCIssuer({
       did: 'did:sns:notario-garcia.abogados.attestto.sol',
-      privateKey: generateKeyPair().privateKey,
+      keyId: '#key-0',
+  privateKey: generateKeyPair().privateKey,
     })
 
     const vc = await notary.issue({
