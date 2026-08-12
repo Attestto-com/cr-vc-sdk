@@ -34,6 +34,7 @@ const signed = (verificationMethod: string): VerifiableCredential =>
   ({
     '@context': ['https://www.w3.org/2018/credentials/v1'],
     'type': ['VerifiableCredential'],
+    'id': 'urn:uuid:9d2c1f7a-6b3e-4c58-9f0a-1e2d3c4b5a69',
     'issuer': SNS_DID,
     'issuanceDate': '2026-01-01T00:00:00Z',
     'credentialSubject': { id: 'did:key:zSubject' },
@@ -48,7 +49,12 @@ const signed = (verificationMethod: string): VerifiableCredential =>
 
 describe('signing — the key id is stated, never assumed', () => {
   it('VCIssuer refuses to construct without a key id', () => {
-    expect(() => new VCIssuer({ did: SNS_DID, privateKey: KEY })).toThrow(/keyId/i)
+    expect(() =>
+      // @ts-expect-error — omitting keyId is the whole point: the type now
+      // forbids it and the constructor must refuse it at runtime too, for
+      // callers compiled from JavaScript or from a looser tsconfig.
+      new VCIssuer({ did: SNS_DID, privateKey: KEY }),
+    ).toThrow(/keyId/i)
   })
 
   it('VCIssuer refuses a key id that is not a fragment', () => {
