@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # This repo's lockfile is pnpm-lock.yaml and CLAUDE.md says `pnpm install`,
       # but CI ran `npm ci`, which requires a package-lock.json that has never
@@ -19,11 +19,11 @@ jobs:
       # stub guard, no lint, no test and no build has ever executed in CI for
       # this package. Found while shipping SOC-174; the PR could not go green
       # for a reason that had nothing to do with the PR.
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 9
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 20
           cache: pnpm
