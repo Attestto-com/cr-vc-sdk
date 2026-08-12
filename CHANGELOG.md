@@ -30,25 +30,25 @@ Security release. The verifier substituted `#key-1` when a proof's `verification
 
 - **Verification is now fail-closed** (SOC-19). An unsigned credential, or one whose signature
   could not be verified because no `resolvePublicKey` resolver was configured, previously produced
-  only a *warning* — `valid` stayed `true`. Callers writing `if (result.valid)` accepted unsigned
+  only a *warning*: `valid` stayed `true`. Callers writing `if (result.valid)` accepted unsigned
   credentials. Both cases are now errors.
 - **Signatures are now bound to the credential issuer** (SOC-16). The verifying key was resolved
-  from `proof.verificationMethod` — a field inside the object being verified, and therefore
-  attacker-controlled — with no check that it belonged to `credential.issuer`. An attacker could
+  from `proof.verificationMethod` (a field inside the object being verified, and therefore
+  attacker-controlled) with no check that it belonged to `credential.issuer`. An attacker could
   sign with their own key, point `verificationMethod` at their own DID, claim any `issuer` they
   liked, and verify as valid. The signing key's DID must now equal the issuer.
 
 ### Added
 
-- `VerificationResult.signatureVerified` — reports whether a cryptographically valid, issuer-bound
-  proof was checked, independently of `valid`.
-- `VerifyOptions.requireSignature` (default `true`) — set `false` for structural-only validation.
+- `VerificationResult.signatureVerified`, which reports whether a cryptographically valid,
+  issuer-bound proof was checked, independently of `valid`.
+- `VerifyOptions.requireSignature` (default `true`): set `false` for structural-only validation.
   `signatureVerified` still reports the real state.
-- `VerifierConfig.verifyIssuerBinding` — optional hook for delegated signing, where the signing key
+- `VerifierConfig.verifyIssuerBinding`, an optional hook for delegated signing, where the signing key
   belongs to a DID the issuer authorizes rather than the issuer itself. Resolve the issuer's DID
   document and return `true` only if the key is an authorized `assertionMethod`. A hook that
   throws is treated as "not authorized".
-- `tests/verifier-parity.spec.ts` — keeps this verifier's security decisions aligned with
+- `tests/verifier-parity.spec.ts`, which keeps this verifier's security decisions aligned with
   `@attestto/vc-sdk`. The two are separate implementations and a fix to one does not reach the
   other; this file fails if they diverge.
 
