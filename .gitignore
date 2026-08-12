@@ -3,3 +3,9 @@ dist/
 coverage/
 *.log
 .DS_Store
+
+# This package is pnpm-managed. A package-lock.json living beside
+# pnpm-lock.yaml is what led CI to run `npm ci` here, which failed at install
+# on every run for months because npm ci requires a lockfile that had never
+# existed. Two lockfiles cannot both be authoritative.
+package-lock.json

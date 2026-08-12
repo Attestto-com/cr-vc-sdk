@@ -40,11 +40,35 @@ const DRIVING_TYPES: CredentialType[] = [
 
 const IDENTITY_TYPES: CredentialType[] = ['IdentityVC']
 
+/**
+ * The sample claims for a type, or a loud failure.
+ *
+ * `SAMPLE_CLAIMS[type]` is `| undefined` now that the map is honestly partial.
+ * Casting that away would let a type added to `ALL_TYPES` without a sample
+ * issue a credential with `claims: undefined` and still pass -- a test that
+ * covers less than its name says, which is the reason the annotation was wrong
+ * in the first place.
+ */
+function claimsFor(type: CredentialType): Record<string, unknown> {
+  const claims = SAMPLE_CLAIMS[type]
+  if (!claims) {
+    throw new Error(`no sample claims for ${type}; add them or drop it from ALL_TYPES`)
+  }
+  return claims
+}
+
 const ALL_TYPES = [...DRIVING_TYPES, ...IDENTITY_TYPES]
 
 // ── Sample claims per credential type ────────────────────────────────
 
-const SAMPLE_CLAIMS: Record<CredentialType, Record<string, unknown>> = {
+// `Partial<...>`, and the change is a finding rather than a formality. The
+// annotation was `Record<CredentialType, ...>`, which asserts a sample for
+// EVERY credential type; the map has twelve of twenty-two. Nothing caught it
+// because tsconfig.json excluded the tests, so this file had never been
+// compiled. The suite exercises `ALL_TYPES`, which is a separate hand-written
+// list, so the missing entries were never reached either -- the type said
+// exhaustive, the value was not, and the test walked a third thing.
+const SAMPLE_CLAIMS: Partial<Record<CredentialType, Record<string, unknown>>> = {
   DrivingLicense: {
     licenseNumber: 'CR-2026-045678',
     categories: ['B', 'A1'],
@@ -242,7 +266,7 @@ describe('end-to-end issue + verify', () => {
         const vc = await issuer.issue({
           type,
           subjectDid: 'did:web:subject.attestto.id',
-          claims: SAMPLE_CLAIMS[type],
+          claims: claimsFor(type),
           expirationDate: '2032-12-31T23:59:59Z',
         })
 
@@ -256,7 +280,7 @@ describe('end-to-end issue + verify', () => {
         const vc = await issuer.issue({
           type,
           subjectDid: 'did:web:subject.attestto.id',
-          claims: SAMPLE_CLAIMS[type],
+          claims: claimsFor(type),
         })
 
         expect(vc['@context']).toContain('https://www.w3.org/2018/credentials/v1')
@@ -272,7 +296,7 @@ describe('end-to-end issue + verify', () => {
         const vc = await issuer.issue({
           type,
           subjectDid: 'did:web:subject.attestto.id',
-          claims: SAMPLE_CLAIMS[type],
+          claims: claimsFor(type),
           expirationDate: '2032-12-31T23:59:59Z',
         })
 
@@ -303,7 +327,7 @@ describe('ES256 algorithm end-to-end', () => {
     const vc = await es256Issuer.issue({
       type: 'DrivingLicense',
       subjectDid: 'did:web:subject.attestto.id',
-      claims: SAMPLE_CLAIMS.DrivingLicense,
+      claims: claimsFor('DrivingLicense'),
       expirationDate: '2032-12-31T23:59:59Z',
     })
 
@@ -323,7 +347,7 @@ describe('ES256 algorithm end-to-end', () => {
     const vc = await es256Issuer.issue({
       type: 'IdentityVC',
       subjectDid: 'did:web:subject.attestto.id',
-      claims: SAMPLE_CLAIMS.IdentityVC,
+      claims: claimsFor('IdentityVC'),
     })
 
     const result = await new VCVerifier().verifyWithKey(
