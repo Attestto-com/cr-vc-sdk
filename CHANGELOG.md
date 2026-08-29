@@ -30,25 +30,25 @@ Security release. The verifier substituted `#key-1` when a proof's `verification
 
 - **Verification is now fail-closed** (SOC-19). An unsigned credential, or one whose signature
   could not be verified because no `resolvePublicKey` resolver was configured, previously produced
-  only a *warning* — `valid` stayed `true`. Callers writing `if (result.valid)` accepted unsigned
+  only a *warning*: `valid` stayed `true`. Callers writing `if (result.valid)` accepted unsigned
   credentials. Both cases are now errors.
 - **Signatures are now bound to the credential issuer** (SOC-16). The verifying key was resolved
-  from `proof.verificationMethod` — a field inside the object being verified, and therefore
-  attacker-controlled — with no check that it belonged to `credential.issuer`. An attacker could
+  from `proof.verificationMethod` (a field inside the object being verified, and therefore
+  attacker-controlled) with no check that it belonged to `credential.issuer`. An attacker could
   sign with their own key, point `verificationMethod` at their own DID, claim any `issuer` they
   liked, and verify as valid. The signing key's DID must now equal the issuer.
 
 ### Added
 
-- `VerificationResult.signatureVerified` — reports whether a cryptographically valid, issuer-bound
-  proof was checked, independently of `valid`.
-- `VerifyOptions.requireSignature` (default `true`) — set `false` for structural-only validation.
+- `VerificationResult.signatureVerified`, which reports whether a cryptographically valid,
+  issuer-bound proof was checked, independently of `valid`.
+- `VerifyOptions.requireSignature` (default `true`): set `false` for structural-only validation.
   `signatureVerified` still reports the real state.
-- `VerifierConfig.verifyIssuerBinding` — optional hook for delegated signing, where the signing key
+- `VerifierConfig.verifyIssuerBinding`, an optional hook for delegated signing, where the signing key
   belongs to a DID the issuer authorizes rather than the issuer itself. Resolve the issuer's DID
   document and return `true` only if the key is an authorized `assertionMethod`. A hook that
   throws is treated as "not authorized".
-- `tests/verifier-parity.spec.ts` — keeps this verifier's security decisions aligned with
+- `tests/verifier-parity.spec.ts`, which keeps this verifier's security decisions aligned with
   `@attestto/vc-sdk`. The two are separate implementations and a fix to one does not reach the
   other; this file fails if they diverge.
 
@@ -75,14 +75,14 @@ is the point of the release. If you relied on the old behaviour for unsigned cre
 ## [0.1.0] - 2026-04-12
 
 ### Added
-- Initial release: SDK for issuing and verifying Verifiable Credentials in the Costa Rica SSI ecosystem.
+- Initial release: SDK for issuing and verifying Verifiable Credentials in the Costa Rica Digital ID ecosystem.
 - **VCIssuer:** Issue signed VCs for 12 credential types with Ed25519 or ES256 algorithms. Linked Data proofs and JWT format. Pluggable issuer metadata (name, carneNumber, colegioId, jurisdiction).
 - **VCVerifier:** Structural validation (9 checks), context routing, expiration/issuance date checks, cryptographic signature verification. Public key resolver interface for DID-based key lookup.
 - **Key management:** `generateKeyPair()`, `sign()`, `verify()`, `toBase64url()`, `fromBase64url()`, `toHex()` for Ed25519 and ES256 (P-256).
 - **12 credential types:** DrivingLicense, TheoreticalTestResult, PracticalTestResult, MedicalFitnessCredential, VehicleRegistration, VehicleTechnicalReview, CirculationRights, SOATCredential, DriverIdentity, TrafficViolation, AccidentReport, IdentityVC.
 - **Context routing:** Driving types → `schemas.attestto.org/cr/driving/v1`, IdentityVC → `schemas.attestto.org/cr/identity/v1`.
 - **IdentityVC:** Flat credentialSubject spread (natural person claims, organization roles/UBO, notarial attestation).
-- StatusList2021 credential status support (placeholder — verification not yet implemented).
-- Test suite: 83 tests — 34 unit (keys, issuer, verifier) + 49 integration (live schema URL validation, end-to-end issue→verify for all 12 types, ES256 cross-algorithm, schema-credential property alignment).
+- StatusList2021 credential status support (placeholder, verification not yet implemented).
+- Test suite: 83 tests, 34 unit (keys, issuer, verifier) and 49 integration (live schema URL validation, end-to-end issue→verify for all 12 types, ES256 cross-algorithm, schema-credential property alignment).
 - `test:unit` and `test:integration` scripts for independent execution.
 - Dual ESM/CJS build via tsup.
